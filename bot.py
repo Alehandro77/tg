@@ -3,7 +3,7 @@ import telebot
 import time  # Импортируем модуль time для задержки
 
 # Замените 'YOUR_BOT_TOKEN' на токен вашего бота
-BOT_TOKEN = 'Token'
+BOT_TOKEN = 'YOUR_BOT_TOKEN'
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -57,6 +57,7 @@ def test_command(message):
     user_answers[user_id]['current_question_message_id'] = first_question_message.message_id
 
 
+
 @bot.message_handler(func=lambda message: True)
 def answer_handler(message):
     user_id = message.chat.id
@@ -76,38 +77,20 @@ def answer_handler(message):
         if 1 <= answer <= 7:
             user_answers[user_id][question_index] = answer  # Сохраняем ответ
 
-            # Собираем ID сообщений для удаления
-            messages_to_delete = []
-
-            # Добавляем все сообщения об ошибках, если они есть
-            if 'error_message_ids' in user_answers[user_id]:
-                messages_to_delete.extend(user_answers[user_id]['error_message_ids'])
-
-            # Добавляем ответ пользователя
-            messages_to_delete.append(message.message_id)
-
-            # Добавляем предыдущий вопрос
-            messages_to_delete.append(user_answers[user_id].get('current_question_message_id'))
-
-
-            # Удаляем все сообщения одновременно
+            # Удаляем предыдущие сообщения
             try:
-                time.sleep(1)  # Задержка перед удалением
+                time.sleep(1)
 
-                for message_id in messages_to_delete:
-                   try:  # Добавляем еще один уровень try-except для каждого удаления
-                        bot.delete_message(user_id, message_id)
-                   except telebot.apihelper.ApiTelegramException as e:
-                        if e.description == "Bad Request: message to delete not found":
-                            print(f"Сообщение {message_id} уже удалено или не существует.")
-                        else:
-                            print(f"Ошибка при удалении сообщения {message_id}: {e}")
+                # Удаляем сообщение об ошибке, если оно есть
+                if 'error_message_id' in user_answers[user_id]:
+                    bot.delete_message(user_id, user_answers[user_id]['error_message_id'])
+                    del user_answers[user_id]['error_message_id']
 
-                # Очищаем error_message_ids, если они были удалены
-                if 'error_message_ids' in user_answers[user_id]:
-                    del user_answers[user_id]['error_message_ids']
+                # Удаляем сообщение пользователя (правильный ответ)
+                bot.delete_message(user_id, message.message_id)
 
-
+                # Удаляем предыдущий вопрос
+                bot.delete_message(user_id, user_answers[user_id]['current_question_message_id'])
 
             except telebot.apihelper.ApiTelegramException as e:
                 print(f"Ошибка при удалении сообщения: {e}")
@@ -117,41 +100,6 @@ def answer_handler(message):
 
             # Если это последний вопрос
             if current_question[user_id] == NUM_QUESTIONS:
-                # Собираем ID сообщений для удаления
-                messages_to_delete = []
-
-                # Добавляем все сообщения об ошибках, если они есть
-                if 'error_message_ids' in user_answers[user_id]:
-                    messages_to_delete.extend(user_answers[user_id]['error_message_ids'])
-
-                # Добавляем ответ пользователя
-                messages_to_delete.append(message.message_id)
-
-                # Добавляем предыдущий вопрос
-                messages_to_delete.append(user_answers[user_id].get('current_question_message_id'))
-
-
-                try:
-                     time.sleep(1)  # Задержка перед удалением
-
-                     for message_id in messages_to_delete:
-                          try:  # Добавляем еще один уровень try-except для каждого удаления
-                              bot.delete_message(user_id, message_id)
-                          except telebot.apihelper.ApiTelegramException as e:
-                               if e.description == "Bad Request: message to delete not found":
-                                   print(f"Сообщение {message_id} уже удалено или не существует.")
-                               else:
-                                   print(f"Ошибка при удалении сообщения {message_id}: {e}")
-
-
-                     # Очищаем error_message_ids, если они были удалены
-                     if 'error_message_ids' in user_answers[user_id]:
-                         del user_answers[user_id]['error_message_ids']
-
-
-                except telebot.apihelper.ApiTelegramException as e:
-                    print(f"Ошибка при удалении сообщения: {e}")
-
                 # Удаляем сообщение с инструкциями
                 try:
                     time.sleep(1)
@@ -167,24 +115,17 @@ def answer_handler(message):
                 next_question_message = bot.send_message(user_id, questions[current_question[user_id]])
                 user_answers[user_id]['current_question_message_id'] = next_question_message.message_id
 
+
         else:
             # Если ответ вне диапазона
             error_message = bot.send_message(user_id, "Пожалуйста, введите число от 1 до 7.")
-
-            # Сохраняем ID сообщения об ошибке в список
-            if 'error_message_ids' not in user_answers[user_id]:
-                user_answers[user_id]['error_message_ids'] = []
-            user_answers[user_id]['error_message_ids'].append(error_message.message_id)
+            user_answers[user_id]['error_message_id'] = error_message.message_id  # Сохраняем ID сообщения об ошибке
 
 
     except ValueError:
         # Если ответ не является числом
         error_message = bot.send_message(user_id, "Пожалуйста, введите числовое значение.")
-
-        # Сохраняем ID сообщения об ошибке в список
-        if 'error_message_ids' not in user_answers[user_id]:
-            user_answers[user_id]['error_message_ids'] = []
-        user_answers[user_id]['error_message_ids'].append(error_message.message_id)
+        user_answers[user_id]['error_message_id'] = error_message.message_id  # Сохраняем ID сообщения об ошибке
 
 
 # Функция для вычисления и отправки результата
