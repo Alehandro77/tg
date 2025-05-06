@@ -1,4 +1,3 @@
-
 import telebot
 import time  # Импортируем модуль time для задержки
 
@@ -8,7 +7,7 @@ BOT_TOKEN = 'YOUR_BOT_TOKEN'
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # Количество вопросов
-NUM_QUESTIONS = 3
+NUM_QUESTIONS = 24
 
 # Словарь для хранения ответов пользователя
 user_answers = {}
@@ -30,16 +29,42 @@ INSTRUCTIONS = """
 
 # Список вопросов
 questions = [
-    "Вопрос 1: Я люблю проводить время на природе.",
-    "Вопрос 2: Я часто чувствую себя уставшим.",
-    "Вопрос 3: Мне нравится общаться с новыми людьми.",
+    "Вопрос 1:	Я часто думаю о будущем, а не о том, что происходит сейчас.",
+    "Вопрос 2:	В общении с людьми я обычно молчу и предпочитаю слушать, а не говорить.",
+    "Вопрос 3:	Когда я принимаю решения, я думаю головой, а не на собственные чувства.",
+    "Вопрос 4:	Я легко выхожу из себя, даже по незначительным поводам.",
+    "Вопрос 5:	Я чувствую себя комфортно, когда все идет по плану, и не люблю неожиданные изменения.	",
+    "Вопрос 6:	Мне часто кажется, что меня не понимают, и я склонен/а к самоанализу.",
+    "Вопрос 7:	Я стараюсь избегать конфликтов любой ценой.",
+    "Вопрос 8:	Я легко увлекаюсь новыми идеями, и часто берусь за несколько дел одновременно, даже если не уверен/а, что смогу их завершить.",
+    "Вопрос 9:	Я очень ответственный/а и тщательно выполняю все свои обязательства.",
+    "Вопрос 10:	Я не люблю новые места и знакомства.",
+    "Вопрос 11:	Мне сложно выражать свои чувства открыто, я предпочитаю держать их в себе.",
+    "Вопрос 12:	Я быстро загораюсь новыми идеями, но так же быстро могу потерять к ним интерес.",
+    "Вопрос 13:	Я стремлюсь к совершенству во всем, за что берусь, и часто критикую себя за недостатки.	",
+    "Вопрос 14:	Мне нравится быть в центре внимания.",
+    "Вопрос 15:	Я часто испытываю чувство вины, даже если не совершил/а ничего плохого.",
+    "Вопрос 16:	Я легко приспосабливаюсь к новым обстоятельствам и люблю спонтанность.",
+    "Вопрос 17:	Мне нравится заниматься рутинной и монотонной работой, требующей внимательности и точности.	",
+    "Вопрос 18:	Я  часто анализирую свои прошлые поступки.",
+    "Вопрос 19:	Я стараюсь избегать ситуаций, в которых могу столкнуться с критикой или осуждением.	",
+    "Вопрос 20:	Я люблю разнообразие и не терплю однообразие.",
+    "Вопрос 21:	Я долго помню обиды.",
+    "Вопрос 22:	В сложных ситуациях я часто действую импульсивно, под влиянием момента.",
+    "Вопрос 23:	Мне сложно расслабиться и отпустить ситуацию, я всегда стараюсь держать все под контролем.	",
+    "Вопрос 24:	Я часто испытываю тревогу и беспокойство без видимых причин."
 ]
 
 # Функция для обработки команды /start
 @bot.message_handler(commands=['start'])
 def start_command(message):
     user_id = message.chat.id
-    bot.send_message(user_id, "Привет, я 'Тест Бот'\nЗдесь вы можете пройти краткий тест, чтобы узнать о себе.\nЕсли хотите начать, нажмите /test")
+    bot.send_message(user_id, "Здравствуйте, вашему вниманию представляется Дифференциально-типологический опросник личности (ДТОЛ). Здесь вы можете узнать особенности вашей личности.\n\n*Опросник не является инструментом для постановки диагноза и предназначен исключительно для самопознания!\n\nЕсли хотите начать, нажмите /test")
+
+@bot.message_handler(commands=['hi'])
+def start_command(message):
+    user_id = message.chat.id
+    bot.send_message(user_id, "Покка")
 
 # Функция для обработки команды /test
 @bot.message_handler(commands=['test'])
@@ -79,7 +104,7 @@ def answer_handler(message):
 
             # Удаляем предыдущие сообщения
             try:
-                time.sleep(1)
+                time.sleep(0.5)
 
                 # Удаляем сообщение об ошибке, если оно есть
                 if 'error_message_id' in user_answers[user_id]:
@@ -102,7 +127,7 @@ def answer_handler(message):
             if current_question[user_id] == NUM_QUESTIONS:
                 # Удаляем сообщение с инструкциями
                 try:
-                    time.sleep(1)
+                    time.sleep(0.5)
                     bot.delete_message(user_id, user_answers[user_id]['instruction_message_id'])
                 except telebot.apihelper.ApiTelegramException as e:
                     print(f"Ошибка при удалении сообщения: {e}")
@@ -118,12 +143,22 @@ def answer_handler(message):
 
         else:
             # Если ответ вне диапазона
+            time.sleep(0.5)
+            bot.delete_message(user_id, message.message_id)
+            if 'error_message_id' in user_answers[user_id]:
+                    bot.delete_message(user_id, user_answers[user_id]['error_message_id'])
+                    del user_answers[user_id]['error_message_id']
             error_message = bot.send_message(user_id, "Пожалуйста, введите число от 1 до 7.")
             user_answers[user_id]['error_message_id'] = error_message.message_id  # Сохраняем ID сообщения об ошибке
 
 
     except ValueError:
         # Если ответ не является числом
+        time.sleep(0.5)
+        bot.delete_message(user_id, message.message_id)
+        if 'error_message_id' in user_answers[user_id]:
+                    bot.delete_message(user_id, user_answers[user_id]['error_message_id'])
+                    del user_answers[user_id]['error_message_id']
         error_message = bot.send_message(user_id, "Пожалуйста, введите числовое значение.")
         user_answers[user_id]['error_message_id'] = error_message.message_id  # Сохраняем ID сообщения об ошибке
 
@@ -134,19 +169,46 @@ def calculate_and_respond(user_id):
         otvet1 = user_answers[user_id][0]
         otvet2 = user_answers[user_id][1]
         otvet3 = user_answers[user_id][2]
+        otvet4 = user_answers[user_id][3]
+        otvet5 = user_answers[user_id][4]
+        otvet6 = user_answers[user_id][5]
+        otvet7 = user_answers[user_id][6]
+        otvet8 = user_answers[user_id][7]
+        otvet9 = user_answers[user_id][8]
+        otvet10 = user_answers[user_id][9]
+        otvet11 = user_answers[user_id][10]
+        otvet12 = user_answers[user_id][11]
+        otvet13 = user_answers[user_id][12]
+        otvet14 = user_answers[user_id][13]
+        otvet15 = user_answers[user_id][14]
+        otvet16 = user_answers[user_id][15]
+        otvet17 = user_answers[user_id][16]
+        otvet18 = user_answers[user_id][17]
+        otvet19 = user_answers[user_id][18]
+        otvet20 = user_answers[user_id][19]
+        otvet21 = user_answers[user_id][20]
+        otvet22 = user_answers[user_id][21]
+        otvet23 = user_answers[user_id][22]
+        otvet24 = user_answers[user_id][23]
 
         # Формула расчета (пример)
-        i = otvet1 + otvet3 - otvet2
+        e = otvet8 + otvet12 + otvet14 + otvet16 + otvet20 + otvet22
+        i = otvet2 + otvet6 + otvet10 + otvet11 + otvet15 + otvet18 + otvet19 + otvet24
+        t = otvet3 + otvet5 + otvet9 + otvet13 + otvet17 + otvet23
+        f = otvet4 + otvet7 + otvet15 + otvet19 + otvet21 + otvet22
+        n = otvet1 + otvet6 + otvet8 + otvet12 + otvet16 + otvet20
+        s = otvet2 + otvet3 + otvet5 + otvet9 + otvet10 + otvet17 + otvet21 + otvet23
 
-        # Логика вывода сообщения (пример)
-        if i > 10:
-            result_text = "Вы, скорее всего, оптимист!"
-        elif 5 <= i <= 10:
-            result_text = "Вы, вероятно, реалист."
-        else:
-            result_text = "Вы, возможно, пессимист."
+        g = otvet8 + otvet14 + otvet16 + otvet20
+        d = otvet6 + otvet11 + otvet15 + otvet18 + otvet19 + otvet24
+        p = otvet5 + otvet9 + otvet13 + otvet17 + otvet23
+        v = otvet4 + otvet12 + otvet22
+        tr = otvet6 + otvet15 + otvet19 + otvet24
+        z = otvet9 + otvet13 + otvet21 + otvet23
 
-        bot.send_message(user_id, f"Вы: {result_text}")
+
+
+        bot.send_message(user_id, f"Суммирование баллов по шкалам (Юнгианская типология) \nЭкстраверсия (E): {e} \nИнтроверсия (I): {i} \nМышление (T): {t} \nЧувствование (F): {f} \nИнтуиция (N): {n} \nСенсорика (S): {s} \n\n Суммирование баллов по шкалам (Акцентуации характера)  \nГипертимность: {g} \nДистимность: {d} \nПедантичность: {p} \nВозбудимость: {v} \nТревожность: {tr} \nЗастревание: {z}")
 
     except KeyError:
         bot.send_message(user_id, "Произошла ошибка при обработке ваших ответов. Пожалуйста, попробуйте еще раз с команды /test")
